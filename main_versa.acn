@@ -85,6 +85,8 @@ IF argv[1] == "commit" {
         EXIT
     }
 
+    COM= 1. CHECK CURRENT BRANCH
+
 
     COM= 2. SYNC (sync w remote)
     PRINT "[INFO] Syncing with remote repository..."
