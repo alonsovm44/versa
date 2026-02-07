@@ -1,4 +1,4 @@
-*.txt
+*.note
 *.log
 *.tmp
 .DS_Store
