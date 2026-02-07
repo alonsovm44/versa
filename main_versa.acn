@@ -72,6 +72,20 @@ IF argv[1] == "commit" {
         EXIT
     }
 
+      remoteCheck = EXEC("git remote -v")
+    
+    IF remoteCheck IS EMPTY OR remoteCheck CONTAINS "fatal" OR remoteCheck CONTAINS "not found" {
+        PRINT "[ERROR] No remote repository found."
+        PRINT "This repository is not connected to GitHub (Git Orphan)."
+        PRINT ""
+        PRINT "Please connect to a remote first before committing:"
+        PRINT "1. git remote add origin <tu-github-repo-url>"
+        PRINT "2. git branch -M main"
+        PRINT "3. git push -u origin main"
+        EXIT
+    }
+
+
     COM= 2. SYNC (sync w remote)
     PRINT "[INFO] Syncing with remote repository..."
     EXEC("git pull --rebase")
