@@ -1,5 +1,6 @@
 INTENT "versa, a version tracking program" {
     PROGRAM GOAL "automate version modification for source code files"
+    BOOL gitRepoExistsInCWD = FILE ".git" EXISTS IN CWD
 
     IF argc < 2 THEN
         PRINT "Use --help"
@@ -19,12 +20,20 @@ INTENT "versa, a version tracking program" {
 
     IF argv[1] == "init" THEN
         IF FILE "version.txt" EXISTS IN CWD THEN
-            PRINT "Version file already exists."
+            PRINT "Versa version file already exists in current directory."
             EXIT
         END IF
-        PRINT "Initializing version file"
-        WRITE_NEW FILE "version.txt" WITH CONTENT:{
+        PRINT "SUCCESS: Initializing version file"
+        WRITE_NEW_FILE "version.txt" WITH CONTENT:{
             0.0.0
+        }
+        IF argv[2] == "--template" {
+
+            WRITE_NEW_FILE ".gitignore" 
+
+            PRINT "SUCCESS: Created .gitignore"
+            PRINT "TIP: "
+            EXIT
         }
         EXIT
     END IF
@@ -33,6 +42,88 @@ INTENT "versa, a version tracking program" {
         PRINT CONTENT OF "version.txt"
         EXIT
     END IF
+
+IF argv[1] == "commit" {
+    IF argc < 4 {
+        PRINT "Usage: versa commit <type> <message>"
+        PRINT "Types: patch, minor, major"
+        EXIT
+    }
+
+    COM= 0. SETUP
+    bumpType = argv[2]      COM= patch, minor, major
+    message = argv[3]        COM=commit message 
+    BOOL hasChangelog = FALSE
+
+    // Verificar si existe CHANGELOG
+    IF FILE "CHANGELOG.md" EXISTS IN CWD OR FILE "CHANGELOG" EXISTS IN CWD {
+        hasChangelog = TRUE
+    }
+    
+    COM=sanity check
+    cmd_status = "git status --porcelain"
+    status_output = EXEC(cmd_status)
+    
+    IF LEN(status_output) > 0 {
+        PRINT "[ERROR] Working directory is dirty."
+        PRINT "The following files have uncommitted changes:"
+        PRINT status_output
+        PRINT "Please commit or stash them first."
+        EXIT
+    }
+
+    COM= 2. SYNC (sync w remote)
+    PRINT "[INFO] Syncing with remote repository..."
+    EXEC("git pull --rebase")
+
+    currentVersion = READ("version.txt")
+    
+    newVersion = bumpVersion(currentVersion, bumpType)
+    
+    PRINT "[BUMP] Bumping version from " + currentVersion + " to " + newVersion + "..."
+
+    
+    COM= update version.txt
+    WRITE("version.txt", newVersion)
+    
+    IF hasChangelog == TRUE {
+        changelogName = "CHANGELOG.md"
+        IF NOT FILE "CHANGELOG.md" EXISTS IN CWD {
+            changelogName = "CHANGELOG"
+        }
+        
+        oldChangelog = READ(changelogName)
+        
+        newHeader = "## [" + newVersion + "] - " + message + "\n\n"
+        
+        WRITE(changelogName, newHeader + oldChangelog)
+        PRINT "[CHLOG] Updated " + changelogName
+    }
+
+    PRINT "[GIT] Staging files..."
+    EXEC("git add version.txt")
+    
+    IF hasChangelog == TRUE {
+        EXEC("git add " + changelogName)
+    }
+
+    commitMsg = "chore(release): bump version to " + newVersion
+    
+    tempMsgFile = ".gitmsg.tmp"
+    WRITE(tempMsgFile, commitMsg + "\n\n" + message)
+    
+    EXEC("git commit -F " + tempMsgFile)
+    REMOVE(tempMsgFile)
+
+    tagCmd = "git tag -a v" + newVersion + " -m \"Release " + newVersion + "\""
+    EXEC(tagCmd)
+    
+    PRINT "[SUCCESS] Version " + newVersion + " committed and tagged."
+    PRINT ""
+    PRINT "Next steps:"
+    PRINT "1. Review changes: git show HEAD"
+    PRINT "2. Push to remote: git push && git push --tags"
+}
 
     IF argv[1] == "set" THEN
         VALIDATE argv[2] IS A SEMVER STRING

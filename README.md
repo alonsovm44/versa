@@ -1,12 +1,15 @@
 # Versa
 
-**Versa** is a lightweight, language-agnostic semantic version manager designed for professional workflows.
+Tired of writing YAML files for CI/CD? Don't want to learn Conventional Commits just to bump a version? Versa is the release manager that works the way YOU work.
 
+## What is Versa?
+**Versa** is a lightweight, language-agnostic semantic version manager designed for professional workflows.
 One `version.txt`.  
 Zero ecosystem lock-in.  
 Works everywhere.
 
 ---
+
 
 ## Why Versa?
 
