@@ -1,0 +1,25 @@
+*.txt
+*.log
+*.tmp
+.DS_Store
+node_modules/
+dist/
+.env
+.vscode/
+.idea/
+*.bak
+*.swp
+*.class
+*.exe
+*.dll
+*.so
+*.o
+*.pyc
+*.cpp
+__pycache__/
+*.iml
+*.jar
+*.war
+.yori_build.cache
+*.json
+# Ignore OS generated files

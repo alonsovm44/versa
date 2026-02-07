@@ -1,0 +1,175 @@
+INTENT "versa, a version tracking program" {
+    PROGRAM GOAL "automate version modification for source code files"
+
+    IF argc < 2 THEN
+        PRINT "Use --help"
+        EXIT
+    END IF
+
+    IF argv[1] == "--help" OR argv[1] == "-h" THEN
+        PRINT "Usage: versa [command] [options]"
+        PRINT "Commands: init, show, bump, set, snippet"
+        EXIT
+    END IF
+
+    IF argv[1] == "--version" OR argv[1] == "-v" THEN
+        PRINT "versa version 1.0.0"
+        EXIT
+    END IF
+
+    IF argv[1] == "init" THEN
+        IF FILE "version.txt" EXISTS IN CWD THEN
+            PRINT "Version file already exists."
+            EXIT
+        END IF
+        PRINT "Initializing version file"
+        WRITE_NEW FILE "version.txt" WITH CONTENT:{
+            0.0.0
+        }
+        EXIT
+    END IF
+
+    IF argv[1] == "show" THEN
+        PRINT CONTENT OF "version.txt"
+        EXIT
+    END IF
+
+    IF argv[1] == "set" THEN
+        VALIDATE argv[2] IS A SEMVER STRING
+        WRITE_NEW FILE "version.txt" WITH CONTENT:{
+            argv[2]
+        }
+        EXIT
+    END IF
+
+    IF argv[1] == "bump" THEN
+        READ CONTENT OF "version.txt" INTO version
+        PARSE version INTO major, minor, patch
+
+        IF argv[2] == "patch" THEN
+            patch = patch + 1
+        ELSE IF argv[2] == "minor" THEN
+            minor = minor + 1
+            patch = 0
+        ELSE IF argv[2] == "major" THEN
+            major = major + 1
+            minor = 0
+            patch = 0
+        ELSE IF argv[2].beginsWith("+") OR argv[2].beginsWith("-") THEN
+            PARSE SEMVER OFFSET
+            APPLY OFFSET
+        ELSE
+            PRINT "Invalid bump command."
+            EXIT
+        END IF
+
+        new_version = major + "." + minor + "." + patch
+        WRITE_NEW FILE "version.txt" WITH CONTENT:{
+            new_version
+        }
+        EXIT
+    END IF
+
+    IF argv[1] == "snippet" THEN
+        IF argc < 3 THEN
+            PRINT "Usage: versa snippet [language]"
+            PRINT "Supported languages: py js java cs go rs cpp c"
+            EXIT
+        END IF
+
+        SET lang = argv[2]
+
+        IF lang == "cpp" OR lang == "c++" OR lang == "c" OR lang == "C" THEN
+           
+            WRITE_NEW FILE "version.cpp" WITH CONTENT:{
+                #include <fstream>
+                #include <string>
+
+                std::string get_version() {
+                    std::ifstream f("version.txt");
+                    std::string v;
+                    std::getline(f, v);
+                    return v;
+                }
+            }
+        ELSE IF lang == "py" OR lang == "python" THEN
+            WRITE_NEW FILE "version_snippet.py" WITH CONTENT:{
+                def get_version():
+                    with open("version.txt", "r") as f:
+                        return f.read().strip()
+            }
+
+            PRINT "Usage:\nfrom version_snippet import get_version\nprint(get_version())"
+        ELSE IF lang == "cs" OR lang == "csharp" THEN
+            WRITE_NEW FILE "version_snippet.cs" WITH CONTENT:{
+                using System;
+                using System.IO;
+
+                public class VersionReader {
+                    public static string GetVersion() {
+                        return File.ReadAllText("version.txt").Trim();
+                    }
+                }
+            }
+
+            PRINT "Usage:\nusing System;\nclass Program {\n    static void Main() {\n        Console.WriteLine(VersionReader.GetVersion());\n    }\n}"
+        ELSE IF lang == "js" OR lang == "javascript" THEN
+            WRITE_NEW FILE "version_snippet.js" WITH CONTENT:{
+                const fs = require("fs");
+
+                function getVersion() {
+                    return fs.readFileSync("version.txt", "utf8").trim();
+                }
+
+                module.exports = { getVersion };
+            }
+
+            PRINT "Usage:\nconst { getVersion } = require('./version_snippet');\nconsole.log(getVersion());"
+        ELSE IF lang == "go" THEN
+            WRITE_NEW FILE "version_snippet.go" WITH CONTENT:{
+                package version
+
+                import (
+                    "os"
+                    "strings"
+                )
+
+                func GetVersion() string {
+                    b, err := os.ReadFile("version.txt")
+                    if err != nil {
+                        return "0.0.0"
+                    }
+                    return strings.TrimSpace(string(b))
+                }
+            }
+
+            PRINT "Usage:\nimport \"version\"\nfmt.Println(version.GetVersion())"
+        ELSE IF lang == "rs" OR lang == "rust" THEN
+            WRITE_NEW FILE "version_snippet.rs" WITH CONTENT:{
+                use std::fs;
+                use std::sync::OnceLock;
+
+                static VERSION: OnceLock<String> = OnceLock::new();
+
+                pub fn version() -> &'static str {
+                    VERSION.get_or_init(|| {
+                        fs::read_to_string("version.txt")
+                            .unwrap_or_else(|_| "0.0.0".to_string())
+                            .trim()
+                            .to_string()
+                    })
+                }
+            }
+
+            PRINT "Usage:\nmod version_snippet;\nprintln!(\"{}\", version_snippet::version());"
+        ELSE
+            PRINT "Unsupported language."
+            EXIT
+        END IF
+
+        EXIT
+    END IF
+
+    PRINT "Invalid command. Use --help for usage information."
+    EXIT
+}
