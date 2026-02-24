@@ -66,25 +66,25 @@ Creates a version.txt file:
 0.0.0
 
 ## Show current version
-versa show
+`versa show`
 Output:
 
 >Current Version: 0.0.0
 
 ## Set a specific version
-versa set 1.2.3
+`versa set 1.2.3`
+Sets version to specified value
 
 ## Bump versions
-versa bump patch   # 1.2.3 → 1.2.4
-versa bump minor   # 1.2.3 → 1.3.0
-versa bump major   # 1.2.3 → 2.0.0
-versa bump +n      # patch +n
-versa bump -n      # patch -n (clamped at 0)
+`versa bump patch   # 1.2.3 → 1.2.4`
+`versa bump minor   # 1.2.3 → 1.3.0`
+`versa bump major   # 1.2.3 → 2.0.0`
+`versa bump +n      # patch +n`
+`versa bump -n      # patch -n (clamped at 0)`
 
 ## Other Features
 Generate version snippets
 versa snippet rust
-
 
 Supported languages:
 
@@ -98,8 +98,7 @@ Supported languages:
 Each snippet reads directly from version.txt, keeping your version consistent across tools and languages.
 
 # CI / CD version checks
-versa check minor >= 1
-
+`versa check minor >= 1`
 Output:
 true
 
@@ -113,17 +112,17 @@ Perfect for CI pipelines and release guards.
 
 Example Use Cases
 
-Monorepos with multiple languages
+- Monorepos with multiple languages
 
-C/C++ projects without package managers
+- C/C++ projects without package managers
 
-Internal developer tools
+- Internal developer tools
 
-SDKs and CLIs
+- SDKs and CLIs
 
-Build systems and automation scripts
+- Build systems and automation scripts
 
-Philosophy
+### Philosophy
 
 Versa is intentionally simple.
 
